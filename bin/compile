@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> [<env-dir>]
+set -euo pipefail
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=${3:-}
+BP_DIR=$(cd "$(dirname "$0")/.." && pwd)
+BIN=caddy_linux_amd64
+
+# Heroku passes config vars as files in ENV_DIR; the environment wins (local tests).
+read_var() {
+  local name=$1
+  if [ -n "${!name:-}" ]; then
+    printf '%s' "${!name}"
+  elif [ -n "$ENV_DIR" ] && [ -f "$ENV_DIR/$name" ]; then
+    tr -d '[:space:]' < "$ENV_DIR/$name"
+  fi
+}
+
+sha() { if command -v sha256sum >/dev/null; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{print $1}'; }
+
+VERSION=$(read_var CADDY_EDGE_VERSION)
+VERSION=${VERSION:-$(tr -d '[:space:]' < "$BP_DIR/VERSION")}
+BASE_URL=$(read_var CADDY_EDGE_BASE_URL)
+BASE_URL=${BASE_URL:-https://github.com/CognyHub/caddy-edge-buildpack-heroku/releases/download}
+
+echo "-----> Caddy Edge $VERSION"
+
+CACHED="$CACHE_DIR/caddy-edge/$VERSION/$BIN"
+mkdir -p "$(dirname "$CACHED")"
+
+if [ -f "$CACHED" ]; then
+  echo "       using cached binary"
+else
+  echo "       downloading $BASE_URL/$VERSION/$BIN"
+  TMP=$(mktemp -d)
+  curl -fsSL --retry 3 -o "$TMP/$BIN" "$BASE_URL/$VERSION/$BIN"
+  curl -fsSL --retry 3 -o "$TMP/SHA256SUMS" "$BASE_URL/$VERSION/SHA256SUMS"
+  expected=$(awk -v f="$BIN" '$2 == f { print $1 }' "$TMP/SHA256SUMS")
+  actual=$(sha "$TMP/$BIN")
+  if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
+    echo " !     sha256 mismatch for $BIN: expected '$expected', got '$actual'" >&2
+    rm -rf "$TMP"
+    exit 1
+  fi
+  mv "$TMP/$BIN" "$CACHED"
+  rm -rf "$TMP"
+fi
+
+cp "$CACHED" "$BUILD_DIR/caddy"
+cp "$BP_DIR/start_caddy.sh" "$BUILD_DIR/start_caddy.sh"
+cp "$BP_DIR/start_edge.sh" "$BUILD_DIR/start_edge.sh"
+chmod 755 "$BUILD_DIR/caddy" "$BUILD_DIR/start_caddy.sh" "$BUILD_DIR/start_edge.sh"
+
+if [ -f "$BUILD_DIR/Caddyfile.template" ]; then
+  echo "       using app Caddyfile.template"
+else
+  cp "$BP_DIR/Caddyfile.template" "$BUILD_DIR/Caddyfile.template"
+  echo "       using default Caddyfile.template"
+fi
