@@ -8,4 +8,4 @@ cp "Caddyfile.template" "Caddyfile"
 #./caddy adapt --config "Caddyfile" --adapter caddyfile --pretty > /tmp/config.json
 
 # start process foreground
-./caddy run --config "Caddyfile" --watch
+./caddy run --config "Caddyfile"

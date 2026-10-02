@@ -37,6 +37,7 @@ web: ./start_edge.sh <your app start command bound to 127.0.0.1:3000>
 
 ```bash
 bash tests/start_edge_test.sh
+bash tests/start_caddy_test.sh
 bash tests/compile_test.sh
 ```
 
