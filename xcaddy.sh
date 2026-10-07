@@ -9,6 +9,7 @@ PLUGINS=(
   github.com/mholt/caddy-ratelimit@5625512f24f6f59d6f64fb3aafe5eecff0b286db
   github.com/caddyserver/cache-handler@v0.17.0
   github.com/darkweak/storages/otter/caddy@v0.0.20
+  github.com/darkweak/storages/simplefs/caddy@v0.0.20
 )
 
 out=${1:?output path}

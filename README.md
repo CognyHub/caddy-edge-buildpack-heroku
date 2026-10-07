@@ -2,7 +2,9 @@
 
 Ships a Caddy binary with rate limiting and HTTP caching, plus a small process supervisor, so a Heroku `web` dyno can run Caddy in front of an app on the same dyno.
 
-Binary: Caddy v2.11.4 + `github.com/mholt/caddy-ratelimit` + `github.com/caddyserver/cache-handler` v0.17.0 + `github.com/darkweak/storages/otter/caddy` (in-memory cache storage).
+Binary: Caddy v2.11.4 + `github.com/mholt/caddy-ratelimit` + `github.com/caddyserver/cache-handler` v0.17.0 + `github.com/darkweak/storages/otter/caddy` (in-memory cache storage) + `github.com/darkweak/storages/simplefs/caddy` (on-disk cache storage).
+
+`simplefs`: do not set its `directory_size` option. In v0.0.20, evicting for space deletes by file path instead of cache key and re-locks a mutex it already holds, so the first write over the limit hangs the request. Bound the storage with `size` (entry count) and a TTL instead.
 
 ## Usage
 

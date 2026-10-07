@@ -9,7 +9,7 @@ Heroku buildpack that installs a pinned Caddy binary with edge plugins (rate lim
 - `start_caddy.sh` — `caddy fmt` the template, copy to `Caddyfile`, `caddy run`. No `--watch`: the file never changes on a running dyno (a config var change restarts it), and the watcher re-adapts the Caddyfile every second, repeating every adapter warning in the logs. Unlike `CognyHub/caddy-buildpack-heroku`, which still uses `--watch`.
 - `start_edge.sh` — runs the app command and `start_caddy.sh`; when either exits, signals the whole process group and exits with that status.
 - `xcaddy.sh` — the single source of Caddy and plugin version pins.
-- `.github/workflows/release.yml` — on tag `v*`, builds linux/amd64 + darwin/arm64, checks the modules `http.handlers.rate_limit`, `http.handlers.cache` and `storages.cache.otter`, and publishes a Release with `SHA256SUMS`.
+- `.github/workflows/release.yml` — on tag `v*`, builds linux/amd64 + darwin/arm64, checks the modules `http.handlers.rate_limit`, `http.handlers.cache`, `storages.cache.otter` and `storages.cache.simplefs`, and publishes a Release with `SHA256SUMS`.
 
 ## Rules
 
